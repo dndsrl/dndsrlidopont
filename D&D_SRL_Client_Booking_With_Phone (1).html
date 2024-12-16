@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D SRL Időpontfoglalás</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f8ff;
+        }
+
+        header {
+            background-color: #1e90ff;
+            color: white;
+            padding: 10px 20px;
+            text-align: left;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .container h2 {
+            text-align: center;
+            background-color: #1e90ff;
+            color: white;
+            margin: 0;
+            padding: 10px;
+        }
+
+        .schedule {
+            padding: 20px;
+        }
+
+        .schedule table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .schedule th, .schedule td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .schedule th {
+            background-color: #1e90ff;
+            color: white;
+        }
+
+        .schedule td select, .schedule td button, .schedule td input[type="date"], .schedule td input[type="tel"] {
+            margin: 5px 0;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .schedule td button {
+            background-color: #1e90ff;
+            color: white;
+        }
+
+        .schedule td button:hover {
+            background-color: #104e8b;
+        }
+
+        .schedule td button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+    <script>
+        function bookSlot(button) {
+            const parentRow = button.closest('tr');
+            const day = parentRow.dataset.day;
+            const time = parentRow.dataset.time;
+            const dateInput = parentRow.querySelector('.date-input').value;
+            const phoneInput = parentRow.querySelector('.phone-input').value.trim();
+            const tireOption = parentRow.querySelector('.tire-select').value;
+            const washOption = parentRow.querySelector('.wash-select').value;
+
+            if (!dateInput) {
+                alert("Kérlek, válassz egy dátumot!");
+                return;
+            }
+
+            if (!phoneInput) {
+                alert("Kérlek, add meg a telefonszámodat!");
+                return;
+            }
+
+            if (!tireOption && !washOption) {
+                alert("Válassz legalább egy lehetőséget a foglaláshoz!");
+                return;
+            }
+
+            const booking = {
+                day: day,
+                date: dateInput,
+                time: time,
+                phone: phoneInput,
+                options: `${tireOption} ${washOption}`.trim()
+            };
+
+            const bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+            bookings.push(booking);
+            localStorage.setItem("bookings", JSON.stringify(bookings));
+
+            button.textContent = `Foglalt (${booking.options})`;
+            button.disabled = true;
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>D&D SRL Időpontfoglalás</h1>
+    </header>
+    <div class="container">
+        <h2>Foglalj Időpontot</h2>
+        <div class="schedule">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nap</th>
+                        <th>Dátum</th>
+                        <th>Időpont</th>
+                        <th>Telefonszám</th>
+                        <th>Opciók</th>
+                        <th>Foglalás</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <script>
+                        const days = ["Hétfő", "Kedd", "Szerda", "Csütörtök", "Péntek"];
+                        const saturday = "Szombat";
+                        const hours = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
+                        const saturdayHours = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00"];
+
+                        const generateGroupedRows = (day, times) => {
+                            const totalRows = times.length;
+                            let rows = `<tr data-day="${day}" data-time="${times[0]}">
+                                            <td rowspan="${totalRows}">${day}</td>
+                                            <td><input type="date" class="date-input"></td>
+                                            <td>${times[0]}</td>
+                                            <td><input type="tel" class="phone-input" placeholder="Telefonszám"></td>
+                                            <td>
+                                                <select class="tire-select">
+                                                    <option value="">Nincs kiválasztva</option>
+                                                    <option value="Gumizás 4 kerékre">Gumizás 4 kerékre</option>
+                                                    <option value="Gumizás 2 kerékre">Gumizás 2 kerékre</option>
+                                                </select>
+                                                <select class="wash-select">
+                                                    <option value="">Nincs kiválasztva</option>
+                                                    <option value="Külső mosás">Külső mosás</option>
+                                                    <option value="Belső takarítás">Belső takarítás</option>
+                                                    <option value="Külső és belső mosás">Külső és belső mosás</option>
+                                                </select>
+                                            </td>
+                                            <td><button onclick="bookSlot(this)">Foglalás</button></td>
+                                        </tr>`;
+
+                            for (let i = 1; i < times.length; i++) {
+                                rows += `<tr data-day="${day}" data-time="${times[i]}">
+                                            <td><input type="date" class="date-input"></td>
+                                            <td>${times[i]}</td>
+                                            <td><input type="tel" class="phone-input" placeholder="Telefonszám"></td>
+                                            <td>
+                                                <select class="tire-select">
+                                                    <option value="">Nincs kiválasztva</option>
+                                                    <option value="Gumizás 4 kerékre">Gumizás 4 kerékre</option>
+                                                    <option value="Gumizás 2 kerékre">Gumizás 2 kerékre</option>
+                                                </select>
+                                                <select class="wash-select">
+                                                    <option value="">Nincs kiválasztva</option>
+                                                    <option value="Külső mosás">Külső mosás</option>
+                                                    <option value="Belső takarítás">Belső takarítás</option>
+                                                    <option value="Külső és belső mosás">Külső és belső mosás</option>
+                                                </select>
+                                            </td>
+                                            <td><button onclick="bookSlot(this)">Foglalás</button></td>
+                                        </tr>`;
+                            }
+
+                            return rows;
+                        };
+
+                        days.forEach(day => {
+                            document.write(generateGroupedRows(day, hours));
+                        });
+
+                        document.write(generateGroupedRows(saturday, saturdayHours));
+                    </script>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
